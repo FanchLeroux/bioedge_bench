@@ -12,6 +12,7 @@ import pathlib
 import matplotlib.pyplot as plt
 
 from src.utils.miscellaneous import custom_warning
+from src.utils.paths import SLM_SDK_DIR
 
 # %%
 
@@ -27,7 +28,7 @@ class MeadowlarkSLM:
         slm_shape=np.array([1152, 1920]),
         lut_path=None,
         wfc_path=None,
-        sdk_path=(r"C:\Program Files\Meadowlark Optics" r"\Blink OverDrive Plus\SDK"),
+        sdk_path=(str(SLM_SDK_DIR)),
     ):
 
         self.board_number = ct.c_uint(board_number)
