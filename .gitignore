@@ -1,0 +1,24 @@
+# Ignore everything in the data and output folders
+data/**
+outputs/**
+
+# But NOT .gitkeep files (negate the rule)
+!data/**/.gitkeep
+!outputs/**/.gitkeep
+
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs
+.vscode/
+
+# LOGs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
