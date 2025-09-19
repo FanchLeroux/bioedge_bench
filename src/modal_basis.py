@@ -1,3 +1,7 @@
+"""
+Functions to compute modal basis (Fourier, KL, Zernike)
+"""
+
 # %% Imports
 
 import pathlib
