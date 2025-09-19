@@ -8,7 +8,7 @@ to be displayed by SLM during calibration
 import numpy as np
 
 from _config import setup_path  # add project root to path
-from _config.paths import DATA_DIR  # set data directory
+from src.utils.paths import DATA_DIR  # set data directory
 
 from src.modal_basis import compute_KL_modes
 from src.utils.miscellaneous import get_utc_now
