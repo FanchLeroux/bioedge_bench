@@ -195,10 +195,10 @@ class ThorlabsZeluxCamera:
 
     def __init__(
         self,
-        sdk_path: str = str(THORCAM_SDK_DIR),
         cam_id: str = "",
         exposure_time: float = 0.1,
         n_frames: int = 1,
+        sdk_path: str = str(THORCAM_SDK_DIR),
     ):
 
         self.sdk_path = sdk_path
