@@ -28,7 +28,7 @@ class MeadowlarkSLM:
         slm_shape=np.array([1152, 1920]),
         lut_path=None,
         wfc_path=None,
-        sdk_path=(str(SLM_SDK_DIR)),
+        sdk_path=str(SLM_SDK_DIR),
     ):
 
         self.board_number = ct.c_uint(board_number)

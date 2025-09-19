@@ -19,6 +19,8 @@ import os
 import sys
 from thorlabs_tsi_sdk.tl_camera import TLCameraSDK
 
+from src.utils.paths import THORCAM_SDK_DIR
+
 # %%
 
 
@@ -34,7 +36,7 @@ class OrcaCamera:
         serial: Optional[str] = None,
         exposure_time: Optional[float] = 0.1,
         n_frames: Optional[int] = 1,
-        roi=[1024, 1024, 2048, 2048]
+        roi=[1024, 1024, 2048, 2048],
     ):
         """
         ORCA camera interface.
@@ -78,9 +80,7 @@ class OrcaCamera:
                 return cam
             cam.close()
 
-        raise RuntimeError(
-            f"Camera with serial '{target_serial}' not found."
-        )
+        raise RuntimeError(f"Camera with serial '{target_serial}' not found.")
 
     # %%
 
@@ -90,7 +90,7 @@ class OrcaCamera:
         exp_time: Optional[float] = None,
         roi: Union[List[int], bool] = False,
         dirc: Union[pathlib.Path, bool] = False,
-        overwrite: bool = False
+        overwrite: bool = False,
     ) -> npt.NDArray[np.float64]:
         """
         Acquire image frames from the ORCA camera.
@@ -106,11 +106,7 @@ class OrcaCamera:
 
         if roi:
             x, y, w, h = roi
-            image = image[
-                :,
-                y - h // 2:y + h // 2,
-                x - w // 2:x + w // 2
-            ]
+            image = image[:, y - h // 2 : y + h // 2, x - w // 2 : x + w // 2]
 
         if dirc:
             hdu = fits.PrimaryHDU(data=image)
@@ -119,15 +115,13 @@ class OrcaCamera:
             acq = self.cam.get_acquisition_parameters()
             val = self.cam.get_all_attribute_values()
 
-            hdr['NFRAMES'] = (acq['nframes'], 'Size of data cube')
-            hdr['EXP_TIME'] = (val['exposure_time'], 'Exposure time (s)')
-            hdr['FPS'] = (val['internal_frame_rate'], 'Frame rate (Hz)')
-            hdr['INTERVAL'] = (
-                val['internal_frame_interval'], 'Frame delay (s)'
-            )
-            hdr['HPOS'] = (val['subarray_hpos'], 'ROI X-pos')
-            hdr['YPOS'] = (val['subarray_vpos'], 'ROI Y-pos')
-            hdr['TIME'] = (timestamp, 'Acquisition time')
+            hdr["NFRAMES"] = (acq["nframes"], "Size of data cube")
+            hdr["EXP_TIME"] = (val["exposure_time"], "Exposure time (s)")
+            hdr["FPS"] = (val["internal_frame_rate"], "Frame rate (Hz)")
+            hdr["INTERVAL"] = (val["internal_frame_interval"], "Frame delay (s)")
+            hdr["HPOS"] = (val["subarray_hpos"], "ROI X-pos")
+            hdr["YPOS"] = (val["subarray_vpos"], "ROI Y-pos")
+            hdr["TIME"] = (timestamp, "Acquisition time")
 
             fname = (
                 f"{self.ID}_exp_"
@@ -146,7 +140,7 @@ class OrcaCamera:
 
     def live_view(
         self,
-        exp_time: Optional = None,
+        exp_time: Optional[float] = None,
         roi: Optional[List[int]] = None,
         interval: float = 0.005,
     ) -> None:
@@ -162,7 +156,7 @@ class OrcaCamera:
         serial = self.cam.get_device_info().serial_number
 
         fig, ax = plt.subplots(figsize=(6, 5))
-        im = ax.imshow(frame, cmap='viridis')
+        im = ax.imshow(frame, cmap="viridis")
         plt.colorbar(im, ax=ax)
 
         title = ax.set_title(
@@ -190,6 +184,7 @@ class OrcaCamera:
         """
         self.cam.close()
 
+
 # %%
 
 
@@ -198,11 +193,13 @@ class ThorlabsZeluxCamera:
     Interface for controlling a Thorlabs camera using the TSI SDK.
     """
 
-    def __init__(self,
-                 sdk_path: str,
-                 cam_id: str = "",
-                 exposure_time: float = 0.1,
-                 n_frames: int = 1):
+    def __init__(
+        self,
+        sdk_path: str = str(THORCAM_SDK_DIR),
+        cam_id: str = "",
+        exposure_time: float = 0.1,
+        n_frames: int = 1,
+    ):
 
         self.sdk_path = sdk_path
         self.cam_id = cam_id
@@ -233,14 +230,12 @@ class ThorlabsZeluxCamera:
         Configure the DLL path for the Thorlabs SDK.
         """
         is_64bits = sys.maxsize > 2**32
-        dll_subfolder = '64_lib' if is_64bits else '32_lib'
+        dll_subfolder = "64_lib" if is_64bits else "32_lib"
 
-        dll_path = pathlib.Path(self.sdk_path) / 'dlls' / dll_subfolder
+        dll_path = pathlib.Path(self.sdk_path) / "dlls" / dll_subfolder
         dll_path = dll_path.resolve()
 
-        os.environ['PATH'] = (
-            str(dll_path) + os.pathsep + os.environ.get('PATH', '')
-        )
+        os.environ["PATH"] = str(dll_path) + os.pathsep + os.environ.get("PATH", "")
 
         try:
             os.add_dll_directory(str(dll_path))
@@ -265,9 +260,7 @@ class ThorlabsZeluxCamera:
 
         cam.arm(self.n_frames)
 
-        shape = (self.n_frames,
-                 cam.image_height_pixels,
-                 cam.image_width_pixels)
+        shape = (self.n_frames, cam.image_height_pixels, cam.image_width_pixels)
 
         frames = np.full(shape, np.nan, dtype=np.float64)
 
@@ -279,8 +272,9 @@ class ThorlabsZeluxCamera:
                 raise RuntimeError("Frame acquisition failed (null frame).")
 
             buffer = np.copy(frame.image_buffer)
-            image = buffer.reshape(cam.image_height_pixels,
-                                   cam.image_width_pixels).astype(np.float64)
+            image = buffer.reshape(
+                cam.image_height_pixels, cam.image_width_pixels
+            ).astype(np.float64)
 
             frames[i, :, :] = image
 
@@ -289,8 +283,7 @@ class ThorlabsZeluxCamera:
 
     # %%
 
-    def live_view(self,
-                  interval: float = 0.01):
+    def live_view(self, interval: float = 0.01):
         """
         Display a real-time live view from the camera.
 
@@ -311,7 +304,7 @@ class ThorlabsZeluxCamera:
         except RuntimeError as e:
             raise RuntimeError("Initial frame acquisition failed.") from e
 
-        im = ax.imshow(frame, cmap='viridis')
+        im = ax.imshow(frame, cmap="viridis")
         plt.colorbar(im, ax=ax)
 
         title = ax.set_title(
@@ -340,10 +333,9 @@ class ThorlabsZeluxCamera:
 
     # %%
 
-    def save_to_fits(self,
-                     frames: np.ndarray,
-                     output_path: pathlib.Path,
-                     overwrite: bool = False):
+    def save_to_fits(
+        self, frames: np.ndarray, output_path: pathlib.Path, overwrite: bool = False
+    ):
         """
         Save acquired frames to a FITS file with camera metadata.
 
@@ -359,11 +351,10 @@ class ThorlabsZeluxCamera:
         hdu = fits.PrimaryHDU(data=frames)
         hdr = hdu.header
 
-        hdr['NFRAMES'] = (self.n_frames, 'Number of frames')
-        hdr['EXPTIME'] = (self.exposure_time, 'Exposure time (s)')
-        hdr['CAMERAID'] = (self.cam_id, 'Camera Serial Number')
-        hdr['ACQTIME'] = (str(datetime.datetime.now()),
-                          'Acquisition timestamp')
+        hdr["NFRAMES"] = (self.n_frames, "Number of frames")
+        hdr["EXPTIME"] = (self.exposure_time, "Exposure time (s)")
+        hdr["CAMERAID"] = (self.cam_id, "Camera Serial Number")
+        hdr["ACQTIME"] = (str(datetime.datetime.now()), "Acquisition timestamp")
 
         hdu.writeto(output_path, overwrite=overwrite)
 
@@ -387,6 +378,7 @@ class ThorlabsZeluxCamera:
     def __del__(self):
         self.close()
 
+
 # %%
 
 # ========================
@@ -399,7 +391,7 @@ if __name__ == "__main__":
     # orca = OrcaCamera()
 
     # Option 2: Use specific serial number
-    orca = OrcaCamera(serial='S/N: 002369')
+    orca = OrcaCamera(serial="S/N: 002369")
 
     orca.exp_time = 0.1
     orca.n_frames = 3
@@ -424,14 +416,11 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
 
-    sdk_dir = (
-        r"D:\Francois_Leroux\code\project\phd_bioedge\manip\thorcam_SDK"
-    )
+    sdk_dir = r"D:\Francois_Leroux\code\project\phd_bioedge\manip\thorcam_SDK"
 
-    thorcam = ThorlabsZeluxCamera(sdk_path=sdk_dir,
-                                  cam_id="18263",
-                                  exposure_time=0.01,
-                                  n_frames=2)
+    thorcam = ThorlabsZeluxCamera(
+        sdk_path=sdk_dir, cam_id="18263", exposure_time=0.01, n_frames=2
+    )
 
     # Optionally start live view
     # cam.live_view()
