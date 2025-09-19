@@ -2,10 +2,6 @@
 data/**
 outputs/**
 
-# But NOT .gitkeep files (negate the rule)
-!data/**/.gitkeep
-!outputs/**/.gitkeep
-
 # Python specific
 __pycache__/
 *.py[cod]
