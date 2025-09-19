@@ -18,13 +18,11 @@ from src.calibration import measure_interaction_matrix
 
 from src.utils.miscellaneous import get_utc_now
 
+from src.utils.save_utils import save
+
 from src.utils.paths import DATA_DIR, SLM_LUT_DIR
 
 # %% Parameters
-
-
-# directory
-dirc_data = pathlib.Path(__file__).parent.parent.parent.parent.parent / "data"
 
 # lut filename
 lut_path = str(SLM_LUT_DIR / "slm5758_at675.lut")
@@ -77,13 +75,13 @@ interaction_matrix = measure_interaction_matrix(
 
 # %% Save interaction matrix
 
-np.save(
+save(
+    interaction_matrix,
     dirc_interaction_matrix
     / (
         utc_now + f"_push_pull_measurements_orca_inline"
         f"_{KL_modes.shape[0]}_modes.npy"
     ),
-    interaction_matrix,
 )
 
 # %% Display
