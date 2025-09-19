@@ -4,6 +4,7 @@ Created on Mon Sep 15 16:41:01 2025
 
 @author: lgs
 """
+# %%
 
 import pathlib
 
