@@ -21,3 +21,6 @@ desktop.ini
 # SDK
 *.dll
 thorlabs_tsi_logger.cfg
+
+# Config files
+*.lut

@@ -10,36 +10,38 @@ import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-from hardware.slm import MeadowlarkSLM
+from src.hardware.slm import MeadowlarkSLM
 
-from hardware.camera import OrcaCamera
+from src.hardware.camera import OrcaCamera
 
-from calibration import measure_interaction_matrix
+from src.calibration import measure_interaction_matrix
 
-from utils import get_utc_now
+from src.utils.miscellaneous import get_utc_now
+
+from src.utils.paths import DATA_DIR, SLM_LUT_DIR
 
 # %% Parameters
 
 
 # directory
-dirc_data = pathlib.Path(
-    __file__).parent.parent.parent.parent.parent / "data"
+dirc_data = pathlib.Path(__file__).parent.parent.parent.parent.parent / "data"
 
 # lut filename
-lut_path = str(dirc_data / "phd_bioedge" / "manip" / "slm_lut"
-               / "slm5758_at675.lut")
+lut_path = str(SLM_LUT_DIR / "slm5758_at675.lut")
 
 exposure_time = 200e-3  # [s]
 
 # %% Load modal basis
 
 # Load KL modes
-filename = ("KL_modes_slm_units_600_pixels_in_slm_pupil_30_subapertures_"
-            "no_wrapping_required.npy")
+filename = (
+    "KL_modes_slm_units_600_pixels_in_slm_pupil_30_subapertures_"
+    "no_wrapping_required.npy"
+)
 KL_modes = np.load(
-    dirc_data / "phd_bioedge" / "manip" / "slm_screens" / "modal_basis" /
-    "KL_modes" / filename,
-    mmap_mode='r')
+    DATA_DIR / "raw" / "modal_basis" / filename,
+    mmap_mode="r",
+)
 
 # chose how many modes are used to calibrate
 n_calibration_modes = KL_modes.shape[0]
@@ -48,30 +50,41 @@ KL_modes = KL_modes[:n_calibration_modes]
 # %% Connect hardware
 
 slm = MeadowlarkSLM(lut_path=lut_path)
-orca = OrcaCamera(serial='S/N: 002369')
+orca = OrcaCamera(serial="S/N: 002369")
 
 # %% Create folder to save results
 
 utc_now = get_utc_now()
 
-dirc_interaction_matrix = dirc_data / "phd_bioedge" / \
-    "manip" / "interaction_matrix" / utc_now
+dirc_interaction_matrix = (
+    DATA_DIR / "experimental" / "raw" / "interaction_matrix" / utc_now
+)
 
 pathlib.Path(dirc_interaction_matrix).mkdir(parents=True, exist_ok=True)
 
 # %% Measure interaction matrix
 
 interaction_matrix = measure_interaction_matrix(
-    slm, orca, KL_modes, n_frames=3, exposure_time=exposure_time, stroke=1.,
-    display=False, dark=None)
+    slm,
+    orca,
+    KL_modes,
+    n_frames=3,
+    exposure_time=exposure_time,
+    stroke=1.0,
+    display=False,
+    dark=None,
+)
 
 # %% Save interaction matrix
 
-np.save(dirc_interaction_matrix /
-        (utc_now +
-         f"_push_pull_measurements_orca_inline"
-         f"_{KL_modes.shape[0]}_modes.npy"),
-        interaction_matrix)
+np.save(
+    dirc_interaction_matrix
+    / (
+        utc_now + f"_push_pull_measurements_orca_inline"
+        f"_{KL_modes.shape[0]}_modes.npy"
+    ),
+    interaction_matrix,
+)
 
 # %% Display
 
