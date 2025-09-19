@@ -60,10 +60,10 @@ class OrcaCamera:
     # %%
 
     def _reset_cam(self):
-        self.cam.exp_time: float = self.exp_time
-        self.cam.n_frames: int = self.n_frames
+        self.cam.exp_time = self.exp_time
+        self.cam.n_frames = self.n_frames
         self.cam.roi = self.roi
-        self.cam.ID: Union[int, str] = self.ID
+        self.cam.ID = self.ID
 
     # %%
 
